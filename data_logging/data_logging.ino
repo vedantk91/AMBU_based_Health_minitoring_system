@@ -1,4 +1,6 @@
 //Include required libraries
+//Google Sheet link---- https://docs.google.com/spreadsheets/d/1SeHCbwECzW-PCDrUTJRjPD4zlu2xblFqK190mxi6c8U/edit#gid=0
+//Deployment 17/03/2023
 #include "WiFi.h"
 #include <HTTPClient.h>
 #include "time.h"
@@ -6,10 +8,12 @@ const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset_sec = 19800;
 const int   daylightOffset_sec = 0;
 // WiFi credentials
-const char* ssid = "TopG";         // change SSID
-const char* password = "wandrewwate";    // change password
+const char* ssid = "Manasi";         // change SSID
+const char* password = "manasi.24";    // change password
 // Google script ID and required credentials
-String GOOGLE_SCRIPT_ID = "AKfycbwDNi8e2UWVZes_TrD6YcuwJFKvgbUFkEu_NdQ2gRFfsNe-ARpc3CeyQL-wKUUhhHy3eA";    // change Gscript ID
+//String GOOGLE_SCRIPT_ID = "AKfycbzLlxH3XT5lwav2IDrzi2fvK-Vlin2yoNkzmvfFT18koVuP8MaOkB5ppMsJ7NBxTrii1A";    // change Gscript ID
+String GOOGLE_SCRIPT_ID = "AKfycbyxkSjINgfvgcDliGRtJ8-xyyw5TyXZilUIIxYY7Ac01wrI5tcGKVk2gT3Pzof_ueWNUQ";    // change Gscript ID
+
 int count = 0;
 void setup() {
   delay(1000);
@@ -47,7 +51,7 @@ void loop() {
     Serial.println(urlFinal);
     HTTPClient http;
     http.begin(urlFinal.c_str());
-    http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+    //http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
     int httpCode = http.GET(); 
     Serial.print("HTTP Status Code: ");
     Serial.println(httpCode);
