@@ -41,7 +41,7 @@ void setup()
     Serial.begin(115200);
     
     //ds18b20 setup part 
-    // Start up the library
+    //Start up the library
 
   sensors.begin();
   
@@ -70,10 +70,10 @@ void setup()
     }
   }
 
-  // //ad8232
-  // pinMode(25, INPUT); // Setup for leads off detection LO +
-  // pinMode(26, INPUT); // Setup for leads off detection LO -
-  // pinMode(A0,INPUT);
+  //ad8232
+  pinMode(40, INPUT); // Setup for leads off detection LO +
+  pinMode(41, INPUT); // Setup for leads off detection LO -
+  pinMode(A0,INPUT);
 
 
     //max30100 setup part starts
@@ -118,16 +118,16 @@ void loop()
   delay(500);
 
 
-//   //ad8232
-//   if((digitalRead(10) == 1)||(digitalRead(11) == 1)){
-//      Serial.println('!');
-//   }
-//   else{
-//     //send the value of analog input 0:
-//     Serial.println(analogRead(A0));
-//   }
-// //Wait for a bit to keep serial data from saturating
-//   delay(10);
+  //ad8232
+  if((digitalRead(40) == 1)||(digitalRead(41) == 1)){
+     Serial.println('!');
+  }
+  else{
+    //send the value of analog input 0:
+    Serial.println(analogRead(A0));
+  }
+//Wait for a bit to keep serial data from saturating
+  delay(10);
 
     
     // max30100 part loop
