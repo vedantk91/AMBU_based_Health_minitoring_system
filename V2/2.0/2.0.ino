@@ -38,7 +38,8 @@ const long  gmtOffset_sec = 19800;
 const int   daylightOffset_sec = 0;
 const char* ssid = "Manasi";         // WIFI SSID
 const char* password = "manasi.24";    // WIFI Password
-String GOOGLE_SCRIPT_ID = "AKfycbwRIdMjEqhbyCGFt_R2OyNtL_EUyzU29-vfzKrqKcI4Atq_QhQHEz9wL-923xzknhqj";    // Gscript ID
+//String GOOGLE_SCRIPT_ID = "AKfycbwRIdMjEqhbyCGFt_R2OyNtL_EUyzU29-vfzKrqKcI4Atq_QhQHEz9wL-923xzknhqj";    // Gscript ID
+String GOOGLE_SCRIPT_ID = "AKfycbzigZVMHqNCZE-73yzYZf4E2TiLE7UR_fYZ0qPzhEb1FewGsCuGHEF9Pn6gFx2HcaOl";      // Sensors only
 
 
 void onBeatDetected()
