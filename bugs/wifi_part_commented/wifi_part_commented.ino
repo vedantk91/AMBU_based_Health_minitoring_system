@@ -63,16 +63,16 @@ void setup(void)
 
   //WIFI
 
-  Serial.println();
-  Serial.print("Connecting to wifi: ");
-  Serial.println(ssid);
-  Serial.flush();
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED)
-  {
-    delay(500);
-    Serial.print(".");
-  }
+  // Serial.println();
+  // Serial.print("Connecting to wifi: ");
+  // Serial.println(ssid);
+  // Serial.flush();
+  // WiFi.begin(ssid, password);
+  // while (WiFi.status() != WL_CONNECTED)
+  // {
+  //   delay(500);
+  //   Serial.print(".");
+  // }
 
   //Time
 
@@ -170,42 +170,42 @@ void loop(void)
 
   // Data Logging
 
-  if (millis() - lastdataupdate > 1000)
-  {
-    if (WiFi.status() == WL_CONNECTED)
-    {
-      static bool flag = false;
-      struct tm timeinfo;
-      if (!getLocalTime(&timeinfo))
-      {
-        Serial.println("Failed to obtain time");
-        return;
-      }
-      char timeStringBuff[50]; //50 chars should be enough
-      strftime(timeStringBuff, sizeof(timeStringBuff), "%A, %B %d %Y %H:%M:%S", &timeinfo);
-      String asString(timeStringBuff);
-      asString.replace(" ", "-");
-      Serial.print("Time:");
-      Serial.println(asString);
-      String urlFinal = "https://script.google.com/macros/s/" + GOOGLE_SCRIPT_ID + "/exec?" + "date=" + asString + "&temperature=" + String(temperature) + + "&heartrate=" + String(heartrate) + "&bloodoxygen" + String(bloodoxygen);
-                        Serial.print("POST data to spreadsheet:");
-                        Serial.println(urlFinal);
-                        HTTPClient http;
-                        http.begin(urlFinal.c_str());
-                        //http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
-                        int httpCode = http.GET();
-                        Serial.print("HTTP Status Code: ");
-                        Serial.println(httpCode);
-                        //---------------------------------------------------------------------
-                        //getting response from google sheet
-                        String payload;
-      if (httpCode > 0) {
-      payload = http.getString();
-        Serial.println("Payload: " + payload);
-      }
-      //---------------------------------------------------------------------
-      http.end();
-    }
-    lastdataupdate = millis();
-  }
+  // if (millis() - lastdataupdate > 1000)
+  // {
+  //   if (WiFi.status() == WL_CONNECTED)
+  //   {
+  //     static bool flag = false;
+  //     struct tm timeinfo;
+  //     if (!getLocalTime(&timeinfo))
+  //     {
+  //       Serial.println("Failed to obtain time");
+  //       return;
+  //     }
+  //     char timeStringBuff[50]; //50 chars should be enough
+  //     strftime(timeStringBuff, sizeof(timeStringBuff), "%A, %B %d %Y %H:%M:%S", &timeinfo);
+  //     String asString(timeStringBuff);
+  //     asString.replace(" ", "-");
+  //     Serial.print("Time:");
+  //     Serial.println(asString);
+  //     String urlFinal = "https://script.google.com/macros/s/" + GOOGLE_SCRIPT_ID + "/exec?" + "date=" + asString + "&temperature=" + String(temperature) + + "&heartrate=" + String(heartrate) + "&bloodoxygen" + String(bloodoxygen);
+  //                       Serial.print("POST data to spreadsheet:");
+  //                       Serial.println(urlFinal);
+  //                       HTTPClient http;
+  //                       http.begin(urlFinal.c_str());
+  //                       //http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+  //                       int httpCode = http.GET();
+  //                       Serial.print("HTTP Status Code: ");
+  //                       Serial.println(httpCode);
+  //                       //---------------------------------------------------------------------
+  //                       //getting response from google sheet
+  //                       String payload;
+  //     if (httpCode > 0) {
+  //     payload = http.getString();
+  //       Serial.println("Payload: " + payload);
+  //     }
+  //     //---------------------------------------------------------------------
+  //     http.end();
+  //   }
+  //   lastdataupdate = millis();
+  // }
 }
