@@ -142,10 +142,10 @@ void loop(void)
   if (millis() - tsLastReport > REPORTING_PERIOD_MS)
   {
     Serial.print("Heart rate:");
-    float heartrate = pox.getHeartRate();
+    heartrate = pox.getHeartRate();
     Serial.print(heartrate);
     Serial.print("bpm / SpO2:");
-    float bloodoxygen = pox.getSpO2();
+    bloodoxygen = pox.getSpO2();
     Serial.print(bloodoxygen);
     Serial.println("%");
 
