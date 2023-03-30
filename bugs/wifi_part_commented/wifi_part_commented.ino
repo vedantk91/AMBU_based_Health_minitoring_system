@@ -30,8 +30,8 @@ unsigned long tsLastReport = 0;         //MAX30100
 unsigned long adLastReport = 0;         //AD8232
 unsigned long lastdataupdate = 0;
 float temperature = 0.0;
-float heartrate;
-float bloodoxygen;
+// float heartrate;
+// float bloodoxygen;
 int numberOfDevices;
 const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset_sec = 19800;
