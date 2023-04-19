@@ -187,7 +187,7 @@ void loop(void)
       asString.replace(" ", "-");
       Serial.print("Time:");
       Serial.println(asString);
-      String urlFinal = "https://script.google.com/macros/s/" + GOOGLE_SCRIPT_ID + "/exec?" + "date=" + asString + "&temperature=" + String(temperature) + + "&heartrate=" + String(heartrate) + "&bloodoxygen" + String(bloodoxygen);
+      String urlFinal = "https://script.google.com/macros/s/" + GOOGLE_SCRIPT_ID + "/exec?" + "date=" + asString + "&temperature=" + String(temperature) + "&heartrate=" + String(heartrate) + "&bloodoxygen=" + String(bloodoxygen);
                         Serial.print("POST data to spreadsheet:");
                         Serial.println(urlFinal);
                         HTTPClient http;

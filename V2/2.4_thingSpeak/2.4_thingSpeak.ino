@@ -4,18 +4,21 @@
 //Libraries
 
 #include "WiFi.h"
-#include <HTTPClient.h>
-#include "time.h"
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <Wire.h>
 #include "MAX30100_PulseOximeter.h"
+#include <ThingSpeak.h>
+#include <esp_task_wdt.h>
+
+
 //#include "FreeRTOS"
 
 //Constants
 
 #define REPORTING_PERIOD_MS 100
 #define ONE_WIRE_BUS 4
+#define WDT_TIMEOUT 60 * 5
 
 //Objects
 
@@ -24,6 +27,9 @@ OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 DeviceAddress tempDeviceAddress;
 TaskHandle_t wifiHandle;
+WiFiClient client;
+
+
 
 //Varialbes
 
@@ -35,13 +41,10 @@ float temperature = 0.0;
 float heartrate;
 float bloodoxygen;
 int numberOfDevices;
-const char* ntpServer = "pool.ntp.org";
-const long gmtOffset_sec = 19800;
-const int daylightOffset_sec = 0;
-const char* ssid = "Manasi";      // WIFI SSID
-const char* password = "manasi.24";  // WIFI Password
-//String GOOGLE_SCRIPT_ID = "AKfycbwRIdMjEqhbyCGFt_R2OyNtL_EUyzU29-vfzKrqKcI4Atq_QhQHEz9wL-923xzknhqj";    // Gscript ID
-String GOOGLE_SCRIPT_ID = "AKfycbzigZVMHqNCZE-73yzYZf4E2TiLE7UR_fYZ0qPzhEb1FewGsCuGHEF9Pn6gFx2HcaOl";  // Sensors only
+const char* ssid = "Manasi";
+const char* password = "manasi.24";
+const char* apiKey = "1DNTAUBVIAL7N0C6";
+const long channelId = 2108287;
 
 
 void onBeatDetected() {
@@ -58,10 +61,13 @@ void configureMax30100() {
 
 
 void setup() {
+
+  esp_task_wdt_init(WDT_TIMEOUT, true);  //enable panic so ESP32 restarts
+  esp_task_wdt_add(NULL);
+
   Serial.begin(115200);
   Serial.print("setup() running on core ");
   Serial.println(xPortGetCoreID());
-
 
 
   //WIFI
@@ -75,10 +81,9 @@ void setup() {
     delay(500);
     Serial.print(".");
   }
+  Serial.println("Connected to WiFi");
+  ThingSpeak.begin(client);
 
-  //Time
-
-  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 
   //DS18B20
 
@@ -114,6 +119,8 @@ void setup() {
   pinMode(40, INPUT);  // Setup for leads off detection LO -
   pinMode(A0, INPUT);
 
+  //ThingsSpeak
+
 
   //create a task that will be executed in the Task2code() function, with priority 1 and executed on core 1
   xTaskCreatePinnedToCore(
@@ -125,7 +132,6 @@ void setup() {
     &wifiHandle, /* Task handle to keep track of created task */
     0);          /* pin task to core 1 */
   delay(500);
-
 }
 
 void wifiPart(void* pvParameters) {
@@ -133,40 +139,23 @@ void wifiPart(void* pvParameters) {
   Serial.println(xPortGetCoreID());
 
   for (;;) {
+    esp_task_wdt_reset();
+
     // Data Logging
 
-    if (millis() - lastdataupdate > 1000) {
+    if (millis() - lastdataupdate > 15000) {
       if (WiFi.status() == WL_CONNECTED) {
-        static bool flag = false;
-        struct tm timeinfo;
-        if (!getLocalTime(&timeinfo)) {
-          Serial.println("Failed to obtain time");
-          return;
+        ThingSpeak.setField(1, temperature);
+        ThingSpeak.setField(2, heartrate);
+        ThingSpeak.setField(3, bloodoxygen);
+        //ThingSpeak.setField(4, number4);
+
+        int x = ThingSpeak.writeFields(channelId, apiKey);
+        if (x == 200) {
+          Serial.println("Channel update successful.");
+        } else {
+          Serial.println("Problem updating channel. HTTP error code " + String(x));
         }
-        char timeStringBuff[50];  //50 chars should be enough
-        strftime(timeStringBuff, sizeof(timeStringBuff), "%A, %B %d %Y %H:%M:%S", &timeinfo);
-        String asString(timeStringBuff);
-        asString.replace(" ", "-");
-        Serial.print("Time:");
-        Serial.println(asString);
-        String urlFinal = "https://script.google.com/macros/s/" + GOOGLE_SCRIPT_ID + "/exec?" + "date=" + asString + "&temperature=" + String(temperature) + "&heartrate=" + String(heartrate) + "&bloodoxygen=" + String(bloodoxygen);
-        Serial.print("POST data to spreadsheet:");
-        Serial.println(urlFinal);
-        HTTPClient http;
-        http.begin(urlFinal.c_str());
-        //http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
-        int httpCode = http.GET();
-        Serial.print("HTTP Status Code: ");
-        Serial.println(httpCode);
-        //---------------------------------------------------------------------
-        //getting response from google sheet
-//        String payload;
-//        if (httpCode > 0) {
-//          payload = http.getString();
-//          Serial.println("Payload: " + payload);
-//        }
-        //---------------------------------------------------------------------
-        http.end();
       }
       lastdataupdate = millis();
     }
@@ -175,47 +164,48 @@ void wifiPart(void* pvParameters) {
 
 
 void loop() {
+  esp_task_wdt_reset();
 
-    pox.update();
+  pox.update();
 
-  
-    //DS18B20
 
-    if (millis() - lastTempRequest >= 2000)  // waited long enough??
-    {
-      temperature = sensors.getTempC(tempDeviceAddress);
-      Serial.print("Temp C: ");
-      Serial.print(temperature);
-      Serial.print(" Temp F: ");
-      Serial.println(DallasTemperature::toFahrenheit(temperature));
-      sensors.requestTemperatures();
-      lastTempRequest = millis();
+  //DS18B20
+
+  if (millis() - lastTempRequest >= 2000)  // waited long enough??
+  {
+    temperature = sensors.getTempC(tempDeviceAddress);
+    Serial.print("Temp C: ");
+    Serial.print(temperature);
+    Serial.print(" Temp F: ");
+    Serial.println(DallasTemperature::toFahrenheit(temperature));
+    sensors.requestTemperatures();
+    lastTempRequest = millis();
+  }
+
+
+  // MAX30100
+
+  if (millis() - tsLastReport > REPORTING_PERIOD_MS) {
+    Serial.print("Heart rate:");
+    heartrate = pox.getHeartRate();
+    Serial.print(heartrate);
+    Serial.print("bpm / SpO2:");
+    bloodoxygen = pox.getSpO2();
+    Serial.print(bloodoxygen);
+    Serial.println("%");
+
+    tsLastReport = millis();
+  }
+
+
+  //AD8232
+
+  if (millis() - adLastReport > 10) {
+    if ((digitalRead(40) == 1) || (digitalRead(41) == 1)) {
+      Serial.println('!');
+    } else {
+      Serial.println(analogRead(A0));
     }
-
-
-    // MAX30100
-
-    if (millis() - tsLastReport > REPORTING_PERIOD_MS) {
-      Serial.print("Heart rate:");
-      heartrate = pox.getHeartRate();
-      Serial.print(heartrate);
-      Serial.print("bpm / SpO2:");
-      bloodoxygen = pox.getSpO2();
-      Serial.print(bloodoxygen);
-      Serial.println("%");
-
-      tsLastReport = millis();
-    }
-
-
-    //AD8232
-
-    if (millis() - adLastReport > 10) {
-      if ((digitalRead(40) == 1) || (digitalRead(41) == 1)) {
-        Serial.println('!');
-      } else {
-        Serial.println(analogRead(A0));
-      }
-      adLastReport = millis();
-    }
+    adLastReport = millis();
+  }
 }

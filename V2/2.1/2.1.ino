@@ -14,7 +14,7 @@
 
 //Constants
 
-#define REPORTING_PERIOD_MS 100
+#define REPORTING_PERIOD_MS 1000
 #define ONE_WIRE_BUS 4
 
 //Objects
@@ -24,6 +24,7 @@ OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 DeviceAddress tempDeviceAddress;
 TaskHandle_t wifiHandle;
+TaskHandle_t hardwareHandle;
 
 //Varialbes
 
@@ -38,8 +39,8 @@ int numberOfDevices;
 const char* ntpServer = "pool.ntp.org";
 const long gmtOffset_sec = 19800;
 const int daylightOffset_sec = 0;
-const char* ssid = "Manasi";      // WIFI SSID
-const char* password = "manasi.24";  // WIFI Password
+const char* ssid = "OnePlus9";      // WIFI SSID
+const char* password = "leena123";  // WIFI Password
 //String GOOGLE_SCRIPT_ID = "AKfycbwRIdMjEqhbyCGFt_R2OyNtL_EUyzU29-vfzKrqKcI4Atq_QhQHEz9wL-923xzknhqj";    // Gscript ID
 String GOOGLE_SCRIPT_ID = "AKfycbzigZVMHqNCZE-73yzYZf4E2TiLE7UR_fYZ0qPzhEb1FewGsCuGHEF9Pn6gFx2HcaOl";  // Sensors only
 
@@ -114,6 +115,16 @@ void setup() {
   pinMode(40, INPUT);  // Setup for leads off detection LO -
   pinMode(A0, INPUT);
 
+  //create a task that will be executed in the Task1code() function, with priority 1 and executed on core 0
+  xTaskCreatePinnedToCore(
+    hardware,        /* Task function. */
+    "hardware",      /* name of task. */
+    10000,           /* Stack size of task */
+    NULL,            /* parameter of the task */
+    1,               /* priority of the task */
+    &hardwareHandle, /* Task handle to keep track of created task */
+    0);              /* pin task to core 0 */
+  delay(500);
 
   //create a task that will be executed in the Task2code() function, with priority 1 and executed on core 1
   xTaskCreatePinnedToCore(
@@ -123,9 +134,64 @@ void setup() {
     NULL,        /* parameter of the task */
     1,           /* priority of the task */
     &wifiHandle, /* Task handle to keep track of created task */
-    0);          /* pin task to core 1 */
+    1);          /* pin task to core 1 */
   delay(500);
 
+
+
+
+
+}
+
+
+
+void hardware(void* pvParameters) {
+  Serial.print("hardwareHandle running on core ");
+  Serial.println(xPortGetCoreID());
+  for (;;) {
+
+    //DS18B20
+
+    if (millis() - lastTempRequest >= 2000)  // waited long enough??
+    {
+      temperature = sensors.getTempC(tempDeviceAddress);
+      Serial.print("Temp C: ");
+      Serial.print(temperature);
+      Serial.print(" Temp F: ");
+      Serial.println(DallasTemperature::toFahrenheit(temperature));
+      sensors.requestTemperatures();
+      lastTempRequest = millis();
+    }
+
+
+    // MAX30100
+
+    pox.update();
+
+    if (millis() - tsLastReport > REPORTING_PERIOD_MS) {
+      Serial.print("Heart rate:");
+      heartrate = pox.getHeartRate();
+      Serial.print(heartrate);
+      Serial.print("bpm / SpO2:");
+      bloodoxygen = pox.getSpO2();
+      Serial.print(bloodoxygen);
+      Serial.println("%");
+
+      tsLastReport = millis();
+    }
+
+
+    //AD8232
+
+    if (millis() - adLastReport > 10) {
+      if ((digitalRead(40) == 1) || (digitalRead(41) == 1)) {
+        Serial.println('!');
+      } else {
+        Serial.println(analogRead(A0));
+      }
+      adLastReport = millis();
+    }
+  }
 }
 
 void wifiPart(void* pvParameters) {
@@ -160,11 +226,11 @@ void wifiPart(void* pvParameters) {
         Serial.println(httpCode);
         //---------------------------------------------------------------------
         //getting response from google sheet
-//        String payload;
-//        if (httpCode > 0) {
-//          payload = http.getString();
-//          Serial.println("Payload: " + payload);
-//        }
+        String payload;
+        if (httpCode > 0) {
+          payload = http.getString();
+          Serial.println("Payload: " + payload);
+        }
         //---------------------------------------------------------------------
         http.end();
       }
@@ -175,47 +241,4 @@ void wifiPart(void* pvParameters) {
 
 
 void loop() {
-
-    pox.update();
-
-  
-    //DS18B20
-
-    if (millis() - lastTempRequest >= 2000)  // waited long enough??
-    {
-      temperature = sensors.getTempC(tempDeviceAddress);
-      Serial.print("Temp C: ");
-      Serial.print(temperature);
-      Serial.print(" Temp F: ");
-      Serial.println(DallasTemperature::toFahrenheit(temperature));
-      sensors.requestTemperatures();
-      lastTempRequest = millis();
-    }
-
-
-    // MAX30100
-
-    if (millis() - tsLastReport > REPORTING_PERIOD_MS) {
-      Serial.print("Heart rate:");
-      heartrate = pox.getHeartRate();
-      Serial.print(heartrate);
-      Serial.print("bpm / SpO2:");
-      bloodoxygen = pox.getSpO2();
-      Serial.print(bloodoxygen);
-      Serial.println("%");
-
-      tsLastReport = millis();
-    }
-
-
-    //AD8232
-
-    if (millis() - adLastReport > 10) {
-      if ((digitalRead(40) == 1) || (digitalRead(41) == 1)) {
-        Serial.println('!');
-      } else {
-        Serial.println(analogRead(A0));
-      }
-      adLastReport = millis();
-    }
 }

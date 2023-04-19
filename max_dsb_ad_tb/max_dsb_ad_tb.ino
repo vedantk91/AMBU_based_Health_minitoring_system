@@ -164,7 +164,7 @@ void loop(void)
 
    //ad8232 loop part 
 
-  if (millis() - lastValueAD >= 10)
+  if (millis() - lastValueAD >= 10){
     if((digitalRead(40) == 1)||(digitalRead(41) == 1)){
         Serial.println('!');
      }
@@ -179,14 +179,14 @@ void loop(void)
 
   //tb6612fng loop part 
   //put condition here for push button 
-  Serial.println("Forward");
+   Serial.println("Forward");
    digitalWrite(AIN1,HIGH); //Motor A Rotate Clockwise
    digitalWrite(AIN2,LOW);
    digitalWrite(PWMA,255);
    delay(3000);
 
 
-  Serial.println("Reverse");
+   Serial.println("Reverse");
    digitalWrite(AIN1,LOW); //Motor A Rotate AntiClockwise
    digitalWrite(AIN2,HIGH);
    digitalWrite(PWMA,255);

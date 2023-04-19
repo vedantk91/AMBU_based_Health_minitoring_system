@@ -16,6 +16,8 @@
 
 #define REPORTING_PERIOD_MS 100
 #define ONE_WIRE_BUS 4
+#define SDA_PIN 23
+#define SCL_PIN 19
 
 //Objects
 
@@ -38,8 +40,8 @@ int numberOfDevices;
 const char* ntpServer = "pool.ntp.org";
 const long gmtOffset_sec = 19800;
 const int daylightOffset_sec = 0;
-const char* ssid = "Manasi";      // WIFI SSID
-const char* password = "manasi.24";  // WIFI Password
+const char* ssid = "OnePlus9";      // WIFI SSID
+const char* password = "leena123";  // WIFI Password
 //String GOOGLE_SCRIPT_ID = "AKfycbwRIdMjEqhbyCGFt_R2OyNtL_EUyzU29-vfzKrqKcI4Atq_QhQHEz9wL-923xzknhqj";    // Gscript ID
 String GOOGLE_SCRIPT_ID = "AKfycbzigZVMHqNCZE-73yzYZf4E2TiLE7UR_fYZ0qPzhEb1FewGsCuGHEF9Pn6gFx2HcaOl";  // Sensors only
 
@@ -62,7 +64,7 @@ void setup() {
   Serial.print("setup() running on core ");
   Serial.println(xPortGetCoreID());
 
-
+  
 
   //WIFI
 
@@ -94,9 +96,10 @@ void setup() {
   sensors.requestTemperatures();
 
   //MAX30100
-
+  Wire.begin(SDA_PIN, SCL_PIN);
   Serial.print("Initializing pulse oximeter..");
   Wire.setClock(400000UL);  // I tried changing the I2C_BUS_SPEED to 100Khz, it made no difference in the output values
+
   // Initialize sensor
   if (!pox.begin()) {
     Serial.println("FAILED");
@@ -105,6 +108,7 @@ void setup() {
   } else {
     Serial.println("SUCCESS");
   }
+  Wire.begin(SDA_PIN, SCL_PIN);
   configureMax30100();
 
 
@@ -125,7 +129,6 @@ void setup() {
     &wifiHandle, /* Task handle to keep track of created task */
     0);          /* pin task to core 1 */
   delay(500);
-
 }
 
 void wifiPart(void* pvParameters) {
@@ -160,11 +163,11 @@ void wifiPart(void* pvParameters) {
         Serial.println(httpCode);
         //---------------------------------------------------------------------
         //getting response from google sheet
-//        String payload;
-//        if (httpCode > 0) {
-//          payload = http.getString();
-//          Serial.println("Payload: " + payload);
-//        }
+        //        String payload;
+        //        if (httpCode > 0) {
+        //          payload = http.getString();
+        //          Serial.println("Payload: " + payload);
+        //        }
         //---------------------------------------------------------------------
         http.end();
       }
@@ -176,46 +179,46 @@ void wifiPart(void* pvParameters) {
 
 void loop() {
 
-    pox.update();
+  pox.update();
 
-  
-    //DS18B20
 
-    if (millis() - lastTempRequest >= 2000)  // waited long enough??
-    {
-      temperature = sensors.getTempC(tempDeviceAddress);
-      Serial.print("Temp C: ");
-      Serial.print(temperature);
-      Serial.print(" Temp F: ");
-      Serial.println(DallasTemperature::toFahrenheit(temperature));
-      sensors.requestTemperatures();
-      lastTempRequest = millis();
+  //DS18B20
+
+  if (millis() - lastTempRequest >= 2000)  // waited long enough??
+  {
+    temperature = sensors.getTempC(tempDeviceAddress);
+    Serial.print("Temp C: ");
+    Serial.print(temperature);
+    Serial.print(" Temp F: ");
+    Serial.println(DallasTemperature::toFahrenheit(temperature));
+    sensors.requestTemperatures();
+    lastTempRequest = millis();
+  }
+
+
+  // MAX30100
+
+  if (millis() - tsLastReport > REPORTING_PERIOD_MS) {
+    Serial.print("Heart rate:");
+    heartrate = pox.getHeartRate();
+    Serial.print(heartrate);
+    Serial.print("bpm / SpO2:");
+    bloodoxygen = pox.getSpO2();
+    Serial.print(bloodoxygen);
+    Serial.println("%");
+
+    tsLastReport = millis();
+  }
+
+
+  //AD8232
+
+  if (millis() - adLastReport > 10) {
+    if ((digitalRead(40) == 1) || (digitalRead(41) == 1)) {
+      Serial.println('!');
+    } else {
+      Serial.println(analogRead(A0));
     }
-
-
-    // MAX30100
-
-    if (millis() - tsLastReport > REPORTING_PERIOD_MS) {
-      Serial.print("Heart rate:");
-      heartrate = pox.getHeartRate();
-      Serial.print(heartrate);
-      Serial.print("bpm / SpO2:");
-      bloodoxygen = pox.getSpO2();
-      Serial.print(bloodoxygen);
-      Serial.println("%");
-
-      tsLastReport = millis();
-    }
-
-
-    //AD8232
-
-    if (millis() - adLastReport > 10) {
-      if ((digitalRead(40) == 1) || (digitalRead(41) == 1)) {
-        Serial.println('!');
-      } else {
-        Serial.println(analogRead(A0));
-      }
-      adLastReport = millis();
-    }
+    adLastReport = millis();
+  }
 }
