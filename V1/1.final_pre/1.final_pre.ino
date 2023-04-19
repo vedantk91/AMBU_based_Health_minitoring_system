@@ -37,6 +37,8 @@ unsigned long adLastReport = 0;
 unsigned long motorLastReport = 0;
 unsigned long lastForward = 0;
 unsigned long lastReverse = 0;
+unsigned long startTime = 0;
+unsigned long currentTime = 0;
 float temperature = 0.0;
 int numberOfDevices;
 bool lastState = 0;
@@ -60,6 +62,8 @@ bool SensitiveBpm = 0;
 bool CriticalBpm = 0;
 bool SensitiveTemp = 0;
 bool CriticalTemp = 0;
+bool forward = 1;
+
 
 
 void onBeatDetected() {
@@ -313,23 +317,29 @@ void ventilator() {
   //  {
   if (motorFlag == 1) {
 
-    Serial.println("motor started");
-    if (millis() - lastForward > 10000) {
-      digitalWrite(AIN1, LOW);  //Motor A Rotate Clockwise
-      digitalWrite(AIN2, HIGH);
-      digitalWrite(PWMA, 255);
-      lastForward = millis();
-
+    currentTime = millis();
+    if (forward && (currentTime - startTime >= 10000)) {
+      forward = false;
+      startTime = currentTime;
+    } else if (!forward && (currentTime - startTime >= 4000)) {
+      forward = true;
+      startTime = currentTime;
     }
-    if (millis() - lastReverse > 4000) {
-      digitalWrite(AIN1, HIGH);  //Motor A Rotate Clockwise
+
+    // Rotate the motor in the current direction
+    if (forward) {
+      digitalWrite(AIN1, HIGH);
       digitalWrite(AIN2, LOW);
       digitalWrite(PWMA, 255);
-      lastReverse = millis();
+      Serial.println("Forward Motor");
+
+    } else {
+      digitalWrite(AIN1, LOW);
+      digitalWrite(AIN2, HIGH);
+      digitalWrite(PWMA, 255);
+      Serial.println("Reverse Motor");
 
     }
-
-
 
   }
   else if (motorFlag == 0) {
