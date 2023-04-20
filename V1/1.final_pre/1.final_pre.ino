@@ -11,7 +11,7 @@
 
 #define REPORTING_PERIOD_MS 1000
 #define ONE_WIRE_BUS 4
-#define BUTTON_PIN 23
+#define BUTTON_PIN 5
 #define AIN1 25
 #define AIN2 26
 #define PWMA 32
@@ -41,7 +41,7 @@ unsigned long startTime = 0;
 unsigned long currentTime = 0;
 float temperature = 0.0;
 int numberOfDevices;
-bool lastState = 0;
+bool lastState = 1;
 int currentState;
 int frequency;
 int channel;
@@ -133,6 +133,19 @@ void setup(void) {
   pinMode(PWMA, OUTPUT);
   pinMode(AIN1, OUTPUT);
   pinMode(AIN2, OUTPUT);
+
+  // motor
+
+  digitalWrite(AIN1, LOW);
+  digitalWrite(AIN2, HIGH);
+  digitalWrite(PWMA, 255);
+  delay(1000);
+  digitalWrite(AIN1, HIGH);
+  digitalWrite(AIN2, LOW);
+  digitalWrite(PWMA, 255);
+  delay(1000);
+
+
 }
 
 
@@ -204,16 +217,16 @@ void loop(void) {
 
     if (heartrate > 130) {
       bpmHighCounter++;
-      if (bpmHighCounter >= 20) {
+      if (bpmHighCounter >= 200) {
         SensitiveBpm = 1;
         CriticalBpm = 0;
         Serial.println("High BPM");
       }
     }
 
-    else if (heartrate < 60) {
+    else if ((heartrate < 60) && (heartrate > 40)) {
       bpmLowCounter++;
-      if (bpmLowCounter = 20) {
+      if (bpmLowCounter >= 200) {
         CriticalBpm = 1;
         SensitiveBpm = 0;
         bpmHighCounter = 0;
@@ -222,8 +235,16 @@ void loop(void) {
       }
     }
 
-    else {
+    else if ((heartrate >= 60) && (heartrate <= 130)) {
       Serial.println("Normal BPM");
+      SensitiveBpm = 0;
+      CriticalBpm = 0;
+      bpmLowCounter = 0;
+      bpmHighCounter = 0;
+    }
+
+    else {
+      //      Serial.println("Garbage");
       SensitiveBpm = 0;
       CriticalBpm = 0;
       bpmLowCounter = 0;
@@ -232,7 +253,7 @@ void loop(void) {
 
     if ((bloodoxygen < 93) && (bloodoxygen > 90)) {
       spoLowCounter++;
-      if (spoLowCounter = 20) {
+      if (spoLowCounter >= 200) {
         SensitiveOxygen = 1;
         CriticalOxygen = 0;
         //      spoCriticalCounter = 0;
@@ -240,9 +261,9 @@ void loop(void) {
       }
     }
 
-    else if (bloodoxygen < 90) {
+    else if (bloodoxygen < 90 && bloodoxygen > 50 ) {
       spoCriticalCounter++;
-      if (spoCriticalCounter >= 20) {
+      if (spoCriticalCounter >= 200) {
         CriticalOxygen = 1;
         SensitiveOxygen = 0;
         //      spoLowCounter = 0;
@@ -258,9 +279,17 @@ void loop(void) {
       spoCriticalCounter = 0;
       spoLowCounter = 0;
     }
+ 
+
+  else {
+    //      Serial.println("Garbage");
+    SensitiveOxygen = 0;
+    CriticalOxygen = 0;
+    spoCriticalCounter = 0;
+    spoLowCounter = 0;
   }
 
-
+  }
 
   //AD8232
 
@@ -302,7 +331,9 @@ void loop(void) {
 
   if (lastState == 0 && currentState == 1) {
     motorFlag = !motorFlag;
+    Serial.println("---------------------------State changed-----------------------------");
   }
+
 
   //  }
   lastState = currentState;
