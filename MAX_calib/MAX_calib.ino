@@ -1,6 +1,6 @@
 
 #include <Wire.h>
-#include "MAX30100_PulseOximeter.h"
+#include "MAX30102_PulseOximeter.h"
  
 #define REPORTING_PERIOD_MS     1000
  
@@ -26,7 +26,7 @@ void setup()
     } else {
         Serial.println("SUCCESS");
     }
-     pox.setIRLedCurrent(MAX30100_LED_CURR_7_6MA);
+     pox.setIRLedCurrent(MAX30102_LED_CURR_7_6MA);
  
     // Register a callback for the beat detection
     pox.setOnBeatDetectedCallback(onBeatDetected);
