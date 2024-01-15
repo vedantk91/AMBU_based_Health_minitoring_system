@@ -1,11 +1,9 @@
 # AMBU_based_Health_minitoring_system
 
-Tasks remaining
+Abstract
 
--4.7k Resistors on SCL and SDA of MAX30100
+Healthcare workers used to manually record vital signs in disaster areas on paper, send them through radio, and then interact with one another, but as patient numbers soared, misunderstanding grew among the healthcare staff. Considering rising healthcare expenditures are a result of technological advancement and because IoT-based systems enable remote data monitoring and system control, the proposed solution will be both financially and technologically cutting edge. Data acquisition from various sensors helps the system to make accurate decisions without any human intervention. 
+The goal of this project is to design a system that can control the pumping mechanism of the breathing apparatus i.e AMBU bag in a ventilator and create a real-time health monitoring system that is affordable, simple to use, and available to both patients and physicians. The system uses Internet of Things (IoT)-based sensors connected to an ESP32 microprocessor to measure the patient's vital body signals. The model also includes an alarm system to inform the concerned person in case of a critical situation. 
+The system primarily comprises four sensors: a pulse oximeter module, an electrocardiogram (ECG) module, a blood pressure sensor, and a temperature sensor. ESP32 will be used to integrate the sensors into a single system. The healthcare provider will be able to access the data after it is uploaded to the cloud from the sensors.
 
--Add peripheral components to 2.5_HTTP and 2.5_Thingspeak
-
--Test final offline code(motor logic especially)
-
--Test final Online code
+The purpose of this project is to develop a system that can regulate the breathing apparatus' pumping mechanism, specifically the AMBU bag in a ventilator, as well as a real-time health monitoring system that is accessible to both patients and doctors and is inexpensive and user-friendly. The system measures the patient's vital bodily signals using Internet of Things (IoT)-based sensors attached to an ESP32 microprocessor. The model also has an alarm system to alert the relevant staff in an emergency. Sensors like an electrocardiogram (ECG), a temperature sensor, and a pulse oximeter module will be included in a single system using ESP32. After the data from the sensors is transferred to the cloud, the healthcare provider can access it.
